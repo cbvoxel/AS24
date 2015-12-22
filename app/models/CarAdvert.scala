@@ -1,6 +1,7 @@
 package models
 
 import java.util.Date
+import play.api.libs.json._
 
 case class CarAdvert(id: String,
                      title: String,
@@ -19,6 +20,22 @@ case class CarAdvert(id: String,
     carAdvert.setMileage(mileage)
     carAdvert.setFirstRegistration(firstRegistration)
     carAdvert
+  }
+
+  def toJson = {
+    implicit val locationWrites = new Writes[CarAdvert] {
+      def writes(carAdvert: CarAdvert) = Json.obj(
+        "id" -> carAdvert.id,
+        "title" -> carAdvert.title,
+        "fuel" -> carAdvert.fuel,
+        "price" -> carAdvert.price,
+        "isNew" -> carAdvert.isNew,
+        "mileage" -> carAdvert.mileage,
+        "firstRegistration" -> carAdvert.firstRegistration.toString
+      )
+    }
+
+    Json.toJson(this)
   }
 }
 
