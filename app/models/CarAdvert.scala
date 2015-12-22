@@ -2,7 +2,7 @@ package models
 
 import java.util.Date
 
-case class CarAdvert(id: Int,
+case class CarAdvert(id: String,
                      title: String,
                      fuel: String,
                      price: Int,
