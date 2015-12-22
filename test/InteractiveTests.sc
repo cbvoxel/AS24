@@ -5,8 +5,10 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.SaveBehavior
-import com.amazonaws.services.dynamodbv2.datamodeling.{DynamoDBMapperConfig, DynamoDBSaveExpression, DynamoDBMapper}
+import com.amazonaws.services.dynamodbv2.datamodeling.{DynamoDBScanExpression, DynamoDBMapperConfig, DynamoDBSaveExpression, DynamoDBMapper}
 import models.CarAdvertDynamoDb
+import play.api.libs.json.Json
+
 // Create or Update
 val carAdvert = CarAdvertDynamoDb("1d4c551c-c3e1-4fff-97a3-de630a89ac35")
 carAdvert.setTitle("Audi A4 Avant")
@@ -29,3 +31,7 @@ mapper.save(carAdvert)
 // Load
 val loaded = mapper.load(CarAdvertDynamoDb("1d4c551c-c3e1-4fff-97a3-de630a89ac35"))
 loaded.toString
+Json.prettyPrint(loaded.toCarAdvert.toJson)
+val result = mapper.scanPage(classOf[CarAdvertDynamoDb], new DynamoDBScanExpression())
+result.getResults.toArray.mkString("\n")
+
