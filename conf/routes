@@ -3,7 +3,11 @@
 # ~~~~
 
 # Home page
-GET     /                           @controllers.Application.index
+GET     /adverts/                    @controllers.CarAdvertsApi.getList
+GET     /adverts/:id                 @controllers.CarAdvertsApi.getById(id)
+DELETE  /adverts/:id                 @controllers.CarAdvertsApi.removeById(id)
+POST    /adverts/:id                 @controllers.CarAdvertsApi.updateById(id)
+PUT     /adverts/                    @controllers.CarAdvertsApi.add
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
