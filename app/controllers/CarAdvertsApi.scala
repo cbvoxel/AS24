@@ -1,18 +1,49 @@
 package controllers
 
-import java.time.Instant
-import java.util.Date
 import javax.inject.Inject
 
 import logic.DynamoDbRepository
 import models.CarAdvertDynamoDb
-import play.api._
-import play.api.libs.json.{JsValue, JsPath}
+import play.api.libs.json.JsValue
 import play.api.mvc._
 
 class CarAdvertsApi @Inject() (repository: DynamoDbRepository) extends Controller  {
-  def getList = Action {
-    Ok(repository.getList.map(_.toCarAdvert.toJson).mkString("[ ", ", ", " ]"))
+
+  def getList = Action { request =>
+    val allCarAdverts = repository.getList.map(_.toCarAdvert)
+    val sortByOption = request.getQueryString("sortby").map(_.toLowerCase)
+    var sortByResultHeaderEntry = ""
+    val sortedListOfCarAdverts = sortByOption match {
+      case Some("fuel") =>
+        sortByResultHeaderEntry = "fuel"
+        allCarAdverts.sortBy(_.fuel)
+      case Some("isnew") =>
+        sortByResultHeaderEntry = "isnew"
+        allCarAdverts.sortBy(_.isNew)
+      case Some("mileage") =>
+        sortByResultHeaderEntry = "mileage"
+        allCarAdverts.sortBy(_.mileage)
+      case Some("price") =>
+        sortByResultHeaderEntry = "price"
+        allCarAdverts.sortBy(_.price)
+      case Some("title") =>
+        sortByResultHeaderEntry = "title"
+        allCarAdverts.sortBy(_.title)
+      case Some("firstregistration") =>
+        sortByResultHeaderEntry = "firstregistration"
+        allCarAdverts.sortBy(_.firstRegistration)
+      case Some("id") =>
+        sortByResultHeaderEntry = "id"
+        allCarAdverts.sortBy(_.id)
+      case None =>
+        sortByResultHeaderEntry = "id"
+        allCarAdverts.sortBy(_.id)
+      case Some(x) =>
+        sortByResultHeaderEntry = "warning_not_known_" + x
+        allCarAdverts.sortBy(_.id)
+    }
+    Ok(sortedListOfCarAdverts.map(_.toJson).mkString("[ ", ", ", " ]"))
+      .withHeaders("SortBy-Key-Used" -> sortByResultHeaderEntry)
   }
 
   def getById(id: String) = Action {
@@ -33,8 +64,10 @@ class CarAdvertsApi @Inject() (repository: DynamoDbRepository) extends Controlle
     val entryOption = repository.getById(id)
     if(entryOption.isDefined) {
       val entry = populate(entryOption.get)(request.body)
-      repository.update(entry)
-      Ok(entry.toCarAdvert.toJson)
+      onValidationPass(entry){
+        repository.update(entry)
+        Ok(entry.toCarAdvert.toJson)
+      }
     } else {
       NotFound
     }
@@ -42,8 +75,10 @@ class CarAdvertsApi @Inject() (repository: DynamoDbRepository) extends Controlle
 
   def add = Action(BodyParsers.parse.json) { request =>
     val entry = populate(CarAdvertDynamoDb())(request.body)
-    repository.update(entry)
-    Ok(entry.toCarAdvert.toJson)
+    onValidationPass(entry) {
+      repository.update(entry)
+      Ok(entry.toCarAdvert.toJson)
+    }
   }
 
   def populate(entry: CarAdvertDynamoDb)(jsValue: JsValue) : CarAdvertDynamoDb = {
@@ -60,10 +95,19 @@ class CarAdvertsApi @Inject() (repository: DynamoDbRepository) extends Controlle
     if (isNew.isDefined) entry.setIsNew(isNew.get.as[Boolean])
     if (mileage.isDefined) entry.setMileage(mileage.get.as[Int])
     if (firstRegistration.isDefined) {
-      val date = Date.from(Instant.parse(firstRegistration.get.as[String]))
+      val date = firstRegistration.get.as[String]
       entry.setFirstRegistration(date)
     }
 
     entry
+  }
+
+  def onValidationPass(entry: CarAdvertDynamoDb)(onSuccess: => Result) = {
+    val validationErrors = entry.validate
+    if(validationErrors.isEmpty) {
+      onSuccess
+    } else {
+      BadRequest(s"""{ "errors":${validationErrors.mkString("[ ", ", ", " ]")} }""")
+    }
   }
 }

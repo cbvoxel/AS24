@@ -9,7 +9,7 @@ case class CarAdvert(id: String,
                      price: Int,
                      isNew: Boolean,
                      mileage: Int,
-                     firstRegistration: Date) {
+                     firstRegistration: String) {
   def toCarAdvertDynamoDb : CarAdvertDynamoDb = {
     val carAdvert = new CarAdvertDynamoDb()
     carAdvert.setId(id)
