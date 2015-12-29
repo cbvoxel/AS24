@@ -4,17 +4,22 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.datamodeling.{DynamoDBMapper, DynamoDBScanExpression}
+import com.google.inject.Inject
 import models.CarAdvertDynamoDb
+import play.Application
+import play.api.Logger
 
 import scala.collection.mutable.ArrayBuffer
 
-class DynamoDbRepositoryImpl extends DynamoDbRepository{
+class DynamoDbRepositoryImpl @Inject() (app: Application) extends DynamoDbRepository{
   // Setup AWS DynamoDB Communication
   val profile = new ProfileCredentialsProvider
   profile.getCredentials.getAWSSecretKey
   profile.getCredentials.getAWSAccessKeyId
   val client = new AmazonDynamoDBClient(profile)
-  client.setRegion(Region.getRegion(Regions.EU_CENTRAL_1))
+  val region = Regions.fromName(app.configuration().getString("dynamodb.region", "eu-central-1"))
+  Logger.debug(s"Defined AWS Region is $region")
+  client.setRegion(Region.getRegion(region))
   val mapper = new DynamoDBMapper(client)
 
   def getList : Array[CarAdvertDynamoDb] = {
