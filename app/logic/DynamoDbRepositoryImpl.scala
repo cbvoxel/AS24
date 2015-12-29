@@ -1,11 +1,9 @@
 package logic
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.regions.{Regions, Region}
+import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
-import com.amazonaws.services.dynamodbv2.datamodeling.{ScanResultPage, DynamoDBScanExpression, DynamoDBMapper}
-import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.model.ScanResult
+import com.amazonaws.services.dynamodbv2.datamodeling.{DynamoDBMapper, DynamoDBScanExpression}
 import models.CarAdvertDynamoDb
 
 import scala.collection.mutable.ArrayBuffer
