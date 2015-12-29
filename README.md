@@ -28,8 +28,7 @@ Example json data
 
 ## Installation
 You must supply your aws credentials in your home directory:
+```bash
 ~/.aws/credentials
-The application uses the region eu-central-1 (hard coded). If this needs to be changed, you must change the code in 
-logic.DynamoDbRepositoryImpl. 
-The application expects a table named `car_adverts`. If this must be changed, you must change the code in 
-models.CarAdvertDynamoDb.
+```
+The application uses the region eu-central-1 by default, this can be changed in the configuration. The application expects a table named `car_adverts`. If this must be changed, you must change the code in models.CarAdvertDynamoDb.
