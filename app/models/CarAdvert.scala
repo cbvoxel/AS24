@@ -8,8 +8,8 @@ case class CarAdvert(id: String,
                      fuel: String,
                      price: Int,
                      isNew: Boolean,
-                     mileage: Int,
-                     firstRegistration: String) {
+                     mileage: Option[Int],
+                     firstRegistration: Option[String]) {
   def toCarAdvertDynamoDb : CarAdvertDynamoDb = {
     val carAdvert = new CarAdvertDynamoDb()
     carAdvert.setId(id)
@@ -17,22 +17,25 @@ case class CarAdvert(id: String,
     carAdvert.setFuel(fuel)
     carAdvert.setPrice(price)
     carAdvert.setIsNew(isNew)
-    carAdvert.setMileage(mileage)
-    carAdvert.setFirstRegistration(firstRegistration)
+    if(mileage.isDefined) carAdvert.setMileage(mileage.get)
+    if(firstRegistration.isDefined) carAdvert.setFirstRegistration(firstRegistration.get)
     carAdvert
   }
 
   def toJson = {
     implicit val locationWrites = new Writes[CarAdvert] {
-      def writes(carAdvert: CarAdvert) = Json.obj(
-        "id" -> carAdvert.id,
-        "title" -> carAdvert.title,
-        "fuel" -> carAdvert.fuel,
-        "price" -> carAdvert.price,
-        "isNew" -> carAdvert.isNew,
-        "mileage" -> carAdvert.mileage,
-        "firstRegistration" -> carAdvert.firstRegistration.toString
-      )
+      def writes(carAdvert: CarAdvert) = {
+        val json = Json.obj(
+          "id" -> carAdvert.id,
+          "title" -> carAdvert.title,
+          "fuel" -> carAdvert.fuel,
+          "price" -> carAdvert.price,
+          "isNew" -> carAdvert.isNew
+        )
+        if(carAdvert.mileage.isDefined) json + "mileage" -> carAdvert.mileage.get
+        if(carAdvert.firstRegistration.isDefined) json + "firstRegistration" -> carAdvert.firstRegistration.get.toString
+        json
+      }
     }
 
     Json.toJson(this)

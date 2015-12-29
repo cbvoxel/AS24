@@ -44,32 +44,39 @@ class CarAdvertsApi @Inject() (repository: DynamoDbRepository) extends Controlle
     }
     Ok(sortedListOfCarAdverts.map(_.toJson).mkString("[ ", ", ", " ]"))
       .withHeaders("SortBy-Key-Used" -> sortByResultHeaderEntry)
+      .withHeaders("Content-Type" -> "application/json")
   }
 
   def getById(id: String) = Action {
     val queryResult = repository.getById(id)
     if(queryResult.isEmpty) {
-      NotFound
+      NotFound.withHeaders("Content-Type" -> "application/json")
     } else {
       Ok(queryResult.get.toCarAdvert.toJson)
+        .withHeaders("Content-Type" -> "application/json")
     }
   }
 
   def removeById(id: String) = Action {
     repository.removeById(id)
-    Ok
+    Ok.withHeaders("Content-Type" -> "application/json")
   }
 
-  def updateById(id: String) = Action(BodyParsers.parse.json) { request =>
+  def updateById(id: String): Object = Action { request =>
+    val jsonBody = request.body.asJson
+    if(jsonBody.isEmpty) {
+      return BadRequest.withHeaders("Content-Type" -> "application/json")
+    }
     val entryOption = repository.getById(id)
     if(entryOption.isDefined) {
-      val entry = populate(entryOption.get)(request.body)
+      val entry = populate(entryOption.get)(jsonBody.get)
       onValidationPass(entry){
         repository.update(entry)
         Ok(entry.toCarAdvert.toJson)
+          .withHeaders("Content-Type" -> "application/json")
       }
     } else {
-      NotFound
+      NotFound.withHeaders("Content-Type" -> "application/json")
     }
   }
 
@@ -78,6 +85,7 @@ class CarAdvertsApi @Inject() (repository: DynamoDbRepository) extends Controlle
     onValidationPass(entry) {
       repository.update(entry)
       Ok(entry.toCarAdvert.toJson)
+        .withHeaders("Content-Type" -> "application/json")
     }
   }
 
@@ -108,6 +116,7 @@ class CarAdvertsApi @Inject() (repository: DynamoDbRepository) extends Controlle
       onSuccess
     } else {
       BadRequest(s"""{ "errors":${validationErrors.mkString("[ ", ", ", " ]")} }""")
+        .withHeaders("Content-Type" -> "application/json")
     }
   }
 }

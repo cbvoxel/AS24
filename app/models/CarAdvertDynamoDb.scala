@@ -1,12 +1,11 @@
 package models
 
-import java.text.{ParseException, Format, SimpleDateFormat}
-import java.time.{LocalDate, Instant}
-import java.time.format.{DateTimeParseException, DateTimeFormatter}
-import java.time.temporal.{TemporalQuery, ChronoField, IsoFields, TemporalAccessor}
-import java.util.{Locale, UUID, Date}
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.util.{Date, UUID}
 
-import com.amazonaws.services.dynamodbv2.datamodeling.{DynamoDBIgnore, DynamoDBAttribute, DynamoDBHashKey, DynamoDBTable}
+import com.amazonaws.services.dynamodbv2.datamodeling.{DynamoDBAttribute, DynamoDBHashKey, DynamoDBIgnore, DynamoDBTable}
 import play.api.Logger
 
 import scala.collection.mutable.ArrayBuffer
@@ -14,12 +13,12 @@ import scala.collection.mutable.ArrayBuffer
 @DynamoDBTable(tableName="car_adverts")
 class CarAdvertDynamoDb {
   private var id: String = UUID.randomUUID().toString
-  private var title: String = ""
-  private var fuel: String = "gasoline"
-  private var price: Int = 0
-  private var isNew: Boolean = true
-  private var mileage: Int = 0
-  private var firstRegistration: String = Date.from(Instant.now()).formatted("yyyy-MM-dd")
+  private var title: Option[String] = None
+  private var fuel: Option[String] = None
+  private var price: Option[Int] = None
+  private var isNew: Option[Boolean] = None
+  private var mileage: Option[Int] = None
+  private var firstRegistration: Option[String] = None
 
   @DynamoDBHashKey(attributeName="id")
   def getId = id
@@ -29,37 +28,42 @@ class CarAdvertDynamoDb {
   }
 
   @DynamoDBAttribute(attributeName="Title")
-  def getTitle = title
-  def setTitle(title: String) = this.title = title
+  def getTitle = title.getOrElse("")
+  def setTitle(title: String) : Unit = this.title = Some(title)
 
   @DynamoDBAttribute(attributeName="Fuel")
-  def getFuel = fuel
-  def setFuel(fuel: String) = {
+  def getFuel = fuel.getOrElse("")
+  def setFuel(fuel: String) : Unit = {
     if(!Seq("gasoline","diesel").contains(fuel)) {
       throw new UnsupportedOperationException("Either use gasoline or diesel (lower case).")
     }
-    this.fuel = fuel
+    this.fuel = Some(fuel)
   }
 
   @DynamoDBAttribute(attributeName="Price")
-  def getPrice = price
-  def setPrice(price: Int) = this.price = price
+  def getPrice = price.getOrElse(0)
+  def setPrice(price: Int) : Unit = this.price = Some(price)
 
   @DynamoDBAttribute(attributeName="IsNew")
-  def getIsNew = isNew
-  def setIsNew(isNew: Boolean) = {
-    this.isNew = isNew
+  def getIsNew = isNew.getOrElse(false)
+  def setIsNew(isNew: Boolean) : Unit = {
+    this.isNew = Some(isNew)
   }
 
   @DynamoDBAttribute(attributeName="Mileage")
-  def getMileage = mileage
-  def setMileage(mileage: Int) = {
-    this.mileage = mileage
+  def getMileage = mileage.getOrElse(0)
+  def setMileage(mileage: Int) : Unit = {
+    if(mileage == 0) this.mileage = None
+    else this.mileage = Some(mileage)
   }
 
   @DynamoDBAttribute(attributeName="FirstRegistration")
-  def getFirstRegistration = firstRegistration
-  def setFirstRegistration(firstRegistration: String) = {
+  def getFirstRegistration = firstRegistration.getOrElse("")
+  def setFirstRegistration(firstRegistration: String) : Unit = {
+    if(firstRegistration.isEmpty) {
+      this.firstRegistration = None
+      return
+    }
     // Validation
     var date : Date = null
     try {
@@ -70,20 +74,25 @@ class CarAdvertDynamoDb {
       case ex: DateTimeParseException =>
         date = new SimpleDateFormat("yyyy-MM-dd").parse(firstRegistration)
     }
-    this.firstRegistration = new SimpleDateFormat("yyyy-MM-dd").format(date)
+    this.firstRegistration = Some(new SimpleDateFormat("yyyy-MM-dd").format(date))
   }
 
   def validate: Array[String] = {
     val result = ArrayBuffer.empty[String]
-    if(mileage > 0 && isNew) {
-      result += "Mileage cannot be > 0 if isNew is set to true!"
+    if(title.isEmpty) result += "Required: title is not set!"
+    if(fuel.isEmpty) result += "Required: fuel is not set!"
+    if(price.isEmpty) result += "Required: price is not set!"
+    if(isNew.isEmpty) result += "Required: isNew is not set!"
+    if(isNew.isDefined) {
+      if(isNew.get && mileage.getOrElse(0) > 0) result += "Mileage cannot be > 0 if isNew is set to true!"
+      if(isNew.get && firstRegistration.isDefined) result += "FirstRegistration cannot set if isNew is set to true!"
     }
     result.toArray
   }
 
   @DynamoDBIgnore
   def toCarAdvert = {
-    CarAdvert(id,title,fuel,price,isNew,mileage,firstRegistration)
+    CarAdvert(id,getTitle,getFuel,getPrice,getIsNew,mileage,firstRegistration)
   }
 
   override def toString = {
