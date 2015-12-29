@@ -249,7 +249,7 @@ class CarAdvertsApiSpec extends Specification with Mockito {
     "Post returns BAD_REQUEST for empty data" in new WithApplication(fakeApplication) {
       val home = route(
         FakeRequest(POST, "/adverts/1d4c551c-c3e1-4fff-97a3-de630a89ac35")
-          .withHeaders("Content-Type" -> "application/json")
+//          .withHeaders("Content-Type" -> "application/json")
           .withBody("""""")
       ).get
 

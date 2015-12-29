@@ -62,7 +62,9 @@ class CarAdvertsApi @Inject() (repository: DynamoDbRepository) extends Controlle
     Ok.withHeaders("Content-Type" -> "application/json")
   }
 
-  def updateById(id: String): Object = Action { request =>
+  def updateById(id: String) = Action { request => updateActionBody(request, id) }
+
+  private def updateActionBody(request: Request[AnyContent], id: String): Result = {
     val jsonBody = request.body.asJson
     if(jsonBody.isEmpty) {
       return BadRequest.withHeaders("Content-Type" -> "application/json")
@@ -110,7 +112,7 @@ class CarAdvertsApi @Inject() (repository: DynamoDbRepository) extends Controlle
     entry
   }
 
-  def onValidationPass(entry: CarAdvertDynamoDb)(onSuccess: => Result) = {
+  def onValidationPass(entry: CarAdvertDynamoDb)(onSuccess: => Result) : Result = {
     val validationErrors = entry.validate
     if(validationErrors.isEmpty) {
       onSuccess
