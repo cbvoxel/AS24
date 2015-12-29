@@ -46,7 +46,3 @@ The application uses the region eu-central-1 (hard coded). If this needs to be c
 logic.DynamoDbRepositoryImpl. 
 The application expects a table named `car_adverts`. If this must be changed, you must change the code in 
 models.CarAdvertDynamoDb.
-
-# TODO
-
-1. Testing
