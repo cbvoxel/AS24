@@ -11,7 +11,7 @@ DELETE  /adverts/            delete advert by id, if it not exists 404 status co
 
 ## Data Format
 Default json data
-'''
+```json
 {
   "id":"<generated uuid>",
   "title":"",
@@ -21,12 +21,12 @@ Default json data
   "price":0,
   "firstRegistration":"<current date/time in format yyyy-MM-dd (*)>"
 }
-'''
+```
 Time format for input can be "yyyy-MM-dd" or in ISO-8601. It will, however, always be returned as "yyyy-MM-dd" (requirement).
 
 
 Example json data
-'''
+```json
 {
   "id":"1d4c551c-c3e1-4fff-97a3-de630a89ac35",
   "title":"Audi A4 Avant - modified",
@@ -36,7 +36,7 @@ Example json data
   "price":8644,
   "firstRegistration":"2010-08-30"
 }
-'''
+```
  
 
 ## Installation
